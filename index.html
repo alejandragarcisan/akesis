@@ -467,21 +467,18 @@ footer {
     </div>
   </div>
   <div>
-    <form class="contact-form" action="https://formsubmit.co/alejandragarcisan@gmail.com" method="POST">
-      <input type="hidden" name="_subject" value="Nuevo mensaje desde Akesis">
-      <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_next" value="">
+    <div class="contact-form">
       <div class="form-field">
         <label for="nombre">Nombre</label>
-        <input id="nombre" type="text" name="nombre" placeholder="Tu nombre completo" required/>
+        <input id="nombre" type="text" placeholder="Tu nombre completo"/>
       </div>
       <div class="form-field">
         <label for="email">Correo electrónico</label>
-        <input id="email" type="email" name="email" placeholder="tu@correo.com" required/>
+        <input id="email" type="email" placeholder="tu@correo.com"/>
       </div>
       <div class="form-field">
         <label for="clase">Clase de interés</label>
-        <select id="clase" name="clase">
+        <select id="clase">
           <option value="" disabled selected>Elige una opción</option>
           <option>Hatha Yoga</option>
           <option>Yin Yoga</option>
@@ -491,11 +488,28 @@ footer {
       </div>
       <div class="form-field">
         <label for="mensaje">Mensaje</label>
-        <textarea id="mensaje" name="mensaje" rows="4" placeholder="Cuéntame en qué puedo ayudarte…"></textarea>
+        <textarea id="mensaje" rows="4" placeholder="Cuéntame en qué puedo ayudarte…"></textarea>
       </div>
-      <button type="submit" class="btn-primary" style="margin-top:0.5rem;border:none;cursor:pointer;">Enviar mensaje</button>
-      <p class="form-note">Al enviar, tu mensaje llegará directamente a Alejandra. Responde en menos de 24 horas.</p>
-    </form>
+      <button type="button" class="btn-primary" style="margin-top:0.5rem;" onclick="sendMail()">Enviar mensaje</button>
+      <p class="form-note">Al pulsar enviar se abrirá tu cliente de correo con el mensaje listo.</p>
+    </div>
+
+    <script>
+    function sendMail() {
+      const nombre  = document.getElementById('nombre').value.trim();
+      const email   = document.getElementById('email').value.trim();
+      const clase   = document.getElementById('clase').value;
+      const mensaje = document.getElementById('mensaje').value.trim();
+      const subject = encodeURIComponent('Mensaje desde Akesis' + (clase ? ' – ' + clase : ''));
+      const body    = encodeURIComponent(
+        (nombre  ? 'Nombre: ' + nombre + '\n' : '') +
+        (email   ? 'Correo: ' + email  + '\n' : '') +
+        (clase   ? 'Clase: '  + clase  + '\n' : '') +
+        (mensaje ? '\n' + mensaje : '')
+      );
+      window.location.href = 'mailto:alejandragarcisan@gmail.com?subject=' + subject + '&body=' + body;
+    }
+    </script>
   </div>
 </section>
 
