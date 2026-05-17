@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Akesis – Alejandra García Sánchez</title>
+<title>Akesis – Respiración Consciente · Alejandra García Sánchez</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -522,6 +522,7 @@ footer {
     uniform vec2  u_mouse;
     uniform float u_mouseStrength;
     uniform float u_aspect;
+    uniform vec2  u_seed;
 
     // Palette — brand colours mapped to 0-1
     // #3E4A45 dark sage, #7A8F78 sage, #B9C7B1 sage-light, #EEE6DA cream, #C9B59A tan
@@ -530,13 +531,18 @@ footer {
     vec3 colC = vec3(0.725, 0.780, 0.694); // #B9C7B1
     vec3 colD = vec3(0.933, 0.902, 0.855); // #EEE6DA
     vec3 colE = vec3(0.788, 0.710, 0.604); // #C9B59A
+    vec3 colF = vec3(0.0, 0.200, 0.400); // #003366 deep navy
 
-    vec3 palette(float t) {
+    vec3 palette(float t, float vein) {
       t = clamp(t, 0.0, 1.0);
-      if (t < 0.25) return mix(colA, colB, t * 4.0);
-      if (t < 0.50) return mix(colB, colC, (t - 0.25) * 4.0);
-      if (t < 0.75) return mix(colC, colD, (t - 0.50) * 4.0);
-      return mix(colD, colE, (t - 0.75) * 4.0);
+      vec3 base;
+      if (t < 0.25) base = mix(colA, colB, t * 4.0);
+      else if (t < 0.50) base = mix(colB, colC, (t - 0.25) * 4.0);
+      else if (t < 0.75) base = mix(colC, colD, (t - 0.50) * 4.0);
+      else base = mix(colD, colE, (t - 0.75) * 4.0);
+      // Vein: narrow spike of dusty rose, appears occasionally
+      float v = smoothstep(0.72, 0.82, vein) * smoothstep(1.0, 0.82, vein);
+      return mix(base, colF, v);
     }
 
     float hash(vec2 p) {
@@ -583,15 +589,19 @@ footer {
       // Very slow drift
       float t = u_time * 0.04;
 
-      vec2 q = vec2(fbm(uv * 2.2 + t),
-                    fbm(uv * 2.2 + vec2(5.2, 1.3) + t));
+      vec2 uvo = uv + u_seed;
+      vec2 q = vec2(fbm(uvo * 2.2 + t),
+                    fbm(uvo * 2.2 + vec2(5.2, 1.3) + t));
 
-      vec2 r = vec2(fbm(uv * 2.2 + 4.0 * q + vec2(1.7, 9.2) + t * 0.8),
-                    fbm(uv * 2.2 + 4.0 * q + vec2(8.3, 2.8) + t * 0.9));
+      vec2 r = vec2(fbm(uvo * 2.2 + 4.0 * q + vec2(1.7, 9.2) + t * 0.8),
+                    fbm(uvo * 2.2 + 4.0 * q + vec2(8.3, 2.8) + t * 0.9));
 
-      float f = fbm(uv * 2.0 + 4.0 * r + t * 0.5);
+      float f = fbm(uvo * 2.0 + 4.0 * r + t * 0.5);
 
-      vec3 col = palette(f * 0.9 + 0.05);
+      // Separate slow-moving field for the vein — offset so it drifts independently
+      float vein = fbm(uvo * 2.2 + r * 1.5 + vec2(3.1, 7.4) + t * 0.07);
+
+      vec3 col = palette(f * 0.9 + 0.05, vein);
 
       // Subtle vignette
       float vig = 1.0 - smoothstep(0.4, 1.2, length(uv - 0.5) * 1.6);
@@ -626,6 +636,8 @@ footer {
   const uMouse   = gl.getUniformLocation(prog, 'u_mouse');
   const uStrength = gl.getUniformLocation(prog, 'u_mouseStrength');
   const uAspect  = gl.getUniformLocation(prog, 'u_aspect');
+  const uSeed   = gl.getUniformLocation(prog, 'u_seed');
+  const seed = [Math.random() * 100.0, Math.random() * 100.0];
 
   let mx = 0, my = 0, strength = 0, targetStrength = 0;
 
@@ -651,6 +663,7 @@ footer {
     gl.uniform2f(uMouse, mx, my);
     gl.uniform1f(uStrength, strength);
     gl.uniform1f(uAspect, canvas.width / canvas.height);
+    gl.uniform2f(uSeed, seed[0], seed[1]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     requestAnimationFrame(loop);
   }
